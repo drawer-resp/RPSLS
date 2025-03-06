@@ -1,28 +1,60 @@
-REMIX DEFAULT WORKSPACE
+# Rock-Paper-Scissors-Lizard-Spock (RPSLS) Game
 
-Remix default workspace is present when:
-i. Remix loads for the very first time 
-ii. A new workspace is created with 'Default' template
-iii. There are no files existing in the File Explorer
+[![Solidity Version](https://img.shields.io/badge/Solidity-^0.8.0-blue)](https://soliditylang.org)
 
-This workspace contains 3 directories:
+A secure, decentralized implementation of the RPSLS game (from *The Big Bang Theory*) on Ethereum blockchain, featuring commit-reveal pattern and timeout protection.
 
-1. 'contracts': Holds three contracts with increasing levels of complexity.
-2. 'scripts': Contains four typescript files to deploy a contract. It is explained below.
-3. 'tests': Contains one Solidity test file for 'Ballot' contract & one JS test file for 'Storage' contract.
+## Features
+✅ RPSLS game rules (5 choices)  
+✅ Commit-reveal pattern for front-running prevention  
+✅ Whitelisted players (4 allowed addresses)  
+✅ Timeout-based fund recovery  
+✅ 1 ETH stake per player  
+✅ Automatic winner determination  
 
-SCRIPTS
+## Game Rules
+Choices: 0 = Rock, 1 = Paper, 2 = Scissors, 3 = Lizard, 4 = Spock  
 
-The 'scripts' folder has four typescript files which help to deploy the 'Storage' contract using 'web3.js' and 'ethers.js' libraries.
+Winning combinations:  
+- Scissors cuts Paper  
+- Paper covers Rock  
+- Rock crushes Lizard  
+- Lizard poisons Spock  
+- Spock smashes Scissors  
+- Scissors decapitates Lizard  
+- Lizard eats Paper  
+- Paper disproves Spock  
+- Spock vaporizes Rock  
+- Rock crushes Scissors  
 
-For the deployment of any other contract, just update the contract name from 'Storage' to the desired contract and provide constructor arguments accordingly 
-in the file `deploy_with_ethers.ts` or  `deploy_with_web3.ts`
+## Contract Structure
+contracts/
+├── RPSLS.sol # Main game logic
+├── CommitReveal.sol # Commit-reveal pattern
+├── TimeUnit.sol # Timeout management
+└── Convert.sol # Hash generation library
 
-In the 'tests' folder there is a script containing Mocha-Chai unit tests for 'Storage' contract.
 
-To run a script, right click on file name in the file explorer and click 'Run'. Remember, Solidity file must already be compiled.
-Output from script will appear in remix terminal.
+## Key Mechanisms
 
-Please note, require/import is supported in a limited manner for Remix supported modules.
-For now, modules supported by Remix are ethers, web3, swarmgw, chai, multihashes, remix and hardhat only for hardhat.ethers object/plugin.
-For unsupported modules, an error like this will be thrown: '<module_name> module require is not supported by Remix IDE' will be shown.
+### 💸 Fund Lock Prevention
+- **Timeouts**: 
+  - Commit phase: 5 minutes 
+  - Reveal phase: 5 minutes
+- Automatic refunds if:
+  - Player doesn't commit within timeframe
+  - Player doesn't reveal after commit
+- Withdrawal function (`withdrawTimeout`) for stuck games
+
+### 🔒 Commit-Reveal Process
+1. Player generates hash: `keccak256(choice + nonce)`
+2. Submit hash via `joinGame()`
+3. After both commit, reveal actual choice with `revealChoice()`
+4. Contract verifies hash matches commit
+
+### ⏳ Timeout Handling
+```solidity
+function withdrawTimeout() external {
+    require(block.timestamp > deadlines, "Too early");
+    // Automatically refunds based on game state
+}
